@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nullmontage</title>
+<link rel="stylesheet" href="/static/style.css?v=9">
+</head>
+<body>
+<header>
+  <div class="wedge"></div>
+  <h1>NULL<span>MONTAGE</span></h1>
+  <p class="tag">Photos + clips + music → beat-cut Soviet montage. Every cut on a beat.</p>
+  <div class="jobline">job <code id="jobId">…</code> <button id="newJob" class="ghost">new job</button></div>
+</header>
+
+<main>
+  <section class="col">
+    <h2>1 · Photos &amp; clips <span id="photoCount" class="pill">0</span></h2>
+    <label class="drop" id="photoDrop">
+      <input type="file" id="photoInput" multiple accept="image/*,video/*,.heic,.heif,.mov,.mp4,.m4v" hidden>
+      <span>Drop photos (JPG/PNG/HEIC) and clips (MOV/MP4) here or click to choose. Order = upload order. To change it: drag thumbnails, click a number to type a position, use ◀ ▶ on hover, or “pick order by clicking”. On each shot: ★ = must be in the final cut, 1× = never repeat it, key = the clip's key moment (click to change).</span>
+    </label>
+    <div id="uploadStatus" class="upl"></div>
+    <div class="row">
+      <button id="aiOrder" class="primary">AI: decide the order</button>
+      <button id="pickOrder">pick order by clicking</button>
+      <button id="pickCancel" class="ghost hidden">cancel</button>
+      <button id="undoOrder" class="ghost hidden">undo</button>
+      <span id="orderStatus" class="muted"></span>
+    </div>
+    <div id="orderResult" class="result hidden"></div>
+    <div class="row">
+      <button id="aiShots" class="primary">AI: analyse shots &amp; key moments</button>
+      <span id="shotsStatus" class="muted"></span>
+    </div>
+    <div id="shotsResult" class="result hidden"></div>
+    <div id="thumbs" class="thumbs"></div>
+
+    <h2>2 · Music <span id="audioInfo" class="pill">none</span></h2>
+    <label class="drop small" id="audioDrop">
+      <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.flac,.aac,.ogg" hidden>
+      <span>Drop an MP3 (or WAV/M4A/FLAC) here</span>
+    </label>
+    <div id="audioStats" class="stats"></div>
+    <div id="songPick" class="hidden">
+      <audio id="player" controls preload="metadata"></audio>
+      <canvas id="songStrip" height="56" title="drag to choose the part of the song; click to seek"></canvas>
+      <div class="row">
+        <button id="markStart" title="use the player position as the start">start here</button>
+        <button id="markEnd" title="use the player position as the end">end here</button>
+        <label class="inl">from <input id="songFrom" type="number" min="0" step="0.1"> s</label>
+        <label class="inl">until <input id="songTo" type="number" min="0" step="0.1"> s</label>
+        <button id="playPart" class="ghost">play the part</button>
+        <button id="wholeSong" class="ghost">whole song</button>
+      </div>
+      <div id="rangeInfo" class="muted"></div>
+    </div>
+  </section>
+
+  <section class="col wide">
+    <h2>3 · Direction</h2>
+    <div class="row">
+      <label>Style preset
+        <select id="preset"></select>
+      </label>
+      <span id="presetDesc" class="muted"></span>
+    </div>
+    <label class="block">Director's notes
+      <textarea id="notes" rows="3" placeholder='e.g. "Eisenstein collision, black and white, cut on every beat, brutal acceleration, strobe at the end, title cards &quot;ARISE&quot; and &quot;STRIKE&quot;"'></textarea>
+    </label>
+    <div class="row">
+      <button id="direct" class="primary">Interpret notes</button>
+      <span id="directSource" class="muted"></span>
+    </div>
+    <div id="directResult" class="result hidden"></div>
+
+    <details open><summary>Rhythm</summary><div class="grid" id="panel-rhythm"></div></details>
+    <details><summary>Structure</summary><div class="grid" id="panel-structure"></div></details>
+    <details><summary>Effects</summary><div class="grid" id="panel-effects"></div></details>
+    <details><summary>Intertitles</summary><div class="grid" id="panel-intertitles"></div></details>
+    <details open><summary>Output</summary><div class="grid" id="panel-output"></div></details>
+  </section>
+
+  <section class="col wide">
+    <h2>4 · Plan</h2>
+    <div class="row">
+      <button id="plan" class="primary">Plan cuts</button>
+      <span id="planStatus" class="muted"></span>
+    </div>
+    <canvas id="timeline" height="140"></canvas>
+    <div id="planStats" class="stats"></div>
+
+    <h2>5 · Render</h2>
+    <div class="row">
+      <button id="preview">Preview 540p</button>
+      <button id="render" class="primary">Render full</button>
+      <span id="renderStatus" class="muted"></span>
+    </div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div id="result" class="hidden">
+      <video id="video" controls playsinline></video>
+      <a id="download" class="button" download>Download</a>
+    </div>
+    <pre id="error" class="error hidden"></pre>
+  </section>
+</main>
+<script src="/static/app.js?v=9"></script>
+</body>
+</html>
