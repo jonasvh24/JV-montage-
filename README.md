@@ -22,7 +22,31 @@ scripts/service.sh logs       # tail data/server.log
 scripts/service.sh uninstall
 ```
 
-The agent runs `.venv/bin/nullmontage` from this folder and logs to `data/server.log`. Run `install` with `ANTHROPIC_API_KEY` exported to bake the key into the service for the Claude director. `PORT=9000 scripts/service.sh install` changes the port; `NULLMONTAGE_HOST=0.0.0.0 scripts/service.sh install` exposes it to other devices on your LAN (then open `http://<your-mac>.local:8765`).
+The agent runs `.venv/bin/nullmontage` from this folder and logs to `data/server.log`. Run `install` with `ANTHROPIC_API_KEY` exported to bake the key into the service for the Claude director. `PORT=9000 scripts/service.sh install` changes the port; `NULLMONTAGE_HOST=0.0.0.0 scripts/service.sh install` exposes it to other devices on your LAN (then open `http://<your-mac>.local:8765`). Set `NULLMONTAGE_PASSWORD` as well to put a password on it.
+
+## Host it online (Docker, password-protected)
+
+```bash
+docker build -t nullmontage .
+docker run -d -p 8765:8765 \
+  -e NULLMONTAGE_PASSWORD='a long passphrase' \
+  -v nullmontage-data:/app/data \
+  nullmontage
+```
+
+The browser asks for a password once; any username works. The container refuses to start without `NULLMONTAGE_PASSWORD`, so a hosted copy cannot go up open by accident. `/healthz` is the only route without the password, for the host's health checks. Jobs and renders live in the `/app/data` volume and survive restarts and redeploys. Add `-e ANTHROPIC_API_KEY=...` for the Claude director.
+
+On a host (Fly.io, Railway, Render): point it at this repo's `Dockerfile`, set `NULLMONTAGE_PASSWORD` as a secret, attach a volume at `/app/data`, and keep HTTPS on, since Basic auth sends the password with every request. The platform's `PORT` is picked up automatically. Start with 2 GB of RAM: frames are composed in Python at 1080×1920. Password attempts are not rate-limited, so use a long passphrase, not a short word.
+
+Fly.io, for example:
+
+```bash
+fly launch --no-deploy                    # detects the Dockerfile; set internal_port = 8765
+fly volumes create nullmontage_data --size 10
+fly secrets set NULLMONTAGE_PASSWORD='a long passphrase'
+# fly.toml:  [mounts]  source = "nullmontage_data"  destination = "/app/data"
+fly deploy
+```
 
 ## Workflow in the UI
 
@@ -70,5 +94,6 @@ nullmontage/planner.py    params + grid + photos → EDL (shots on the tick grid
 nullmontage/effects.py    per-frame image ops, intertitle cards
 nullmontage/render.py     EDL → frames → ffmpeg (libx264 / prores_ks)
 nullmontage/server.py     FastAPI routes + SSE progress
+nullmontage/auth.py       optional password gate (NULLMONTAGE_PASSWORD)
 static/                   the UI (vanilla HTML/JS)
 ```

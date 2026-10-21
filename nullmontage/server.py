@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import audio as audio_mod
+from .auth import PasswordGate
 from .director import claude_available, interpret
 from .effects import IMAGE_EXT, VIDEO_EXT, check_source, make_thumbnail, mean_brightness, placeholder_thumbnail, sniff_kind
 from .jobs import JobStore, run_in_thread
@@ -27,6 +28,9 @@ from . import shots as shots_mod
 STATIC = Path(__file__).resolve().parent.parent / "static"
 app = FastAPI(title="nullmontage")
 store = JobStore()
+PASSWORD = os.environ.get("NULLMONTAGE_PASSWORD", "")
+if PASSWORD:
+    app.add_middleware(PasswordGate, password=PASSWORD)
 SOURCE_EXT = IMAGE_EXT | VIDEO_EXT
 AUDIO_EXT = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".aiff", ".aif"}
 
@@ -41,6 +45,11 @@ def _job(jid: str):
 def _safe_name(name: str) -> str:
     name = os.path.basename(name or "file")
     return re.sub(r"[^A-Za-z0-9._-]", "_", name)[:120] or "file"
+
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -482,6 +491,9 @@ def main():
 
     port = int(os.environ.get("PORT", "8765"))
     host = os.environ.get("NULLMONTAGE_HOST", "127.0.0.1")  # set NULLMONTAGE_HOST=0.0.0.0 to reach it from other devices on your LAN
+    # The Docker image sets this: a hosted copy without a password would let anyone upload and render.
+    if os.environ.get("NULLMONTAGE_REQUIRE_PASSWORD") == "1" and not PASSWORD:
+        raise SystemExit("NULLMONTAGE_PASSWORD is not set; refusing to start an open server")
     print(f"nullmontage → http://localhost:{port}", flush=True)
     uvicorn.run("nullmontage.server:app", host=host, port=port, reload=False)
 
